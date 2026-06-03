@@ -1,6 +1,11 @@
-# Twirly Tails Order Management System (OMS)
+# Order Management System (OMS)
 
-A comprehensive Order and Inventory Management System with Role-Based Access Control (RBAC), designed for businesses to manage products, suppliers, and customer orders efficiently.
+A comprehensive Order and Inventory Management System with Role-Based Access Control (RBAC), designed to manage products, suppliers, and customer orders efficiently.
+
+## 🔗 Live Demo
+**Access the functional prototype here:** [https://im-2-seven.vercel.app/](https://im-2-seven.vercel.app/)
+
+---
 
 ## 🚀 Features
 
@@ -16,38 +21,12 @@ A comprehensive Order and Inventory Management System with Role-Based Access Con
 
 ## 🌐 Vercel Deployment (Demo Mode)
 
-This project is configured for **Vercel** via `vercel.json`. Since Vercel is a serverless platform, the PHP backend and MySQL database will not run natively there.
+This project is optimized for **Vercel**. Since Vercel is a serverless platform, the application includes a **Mock/Demo Mode** to ensure a fully functional experience without a live MySQL database:
+- **Automatic Detection:** The system detects the Vercel environment and switches to simulated data.
+- **Simulated Authentication:** Login using the default credentials to see specific role views.
+- **Sample Data:** Pre-populated with inventory, orders, and analytics for demonstration purposes.
 
-To allow for a functional demo on Vercel, the application includes a **Mock/Demo Mode**:
-- **Automatic Detection:** If the site is accessed via a `.vercel.app` domain, it automatically switches to Mock Mode.
-- **Simulated Authentication:** You can "log in" using the default credentials. The system will simulate the correct role and permissions (Admin, Staff, or Supplier) using local storage and hardcoded data.
-- **Limited Functionality:** While navigation and UI permissions work perfectly, data persistence (creating real orders or updating real inventory) is disabled in this mode.
-
-## 🛠️ Tech Stack
-
-- **Backend:** PHP 8.x
-- **Database:** MySQL
-- **Frontend:** HTML5, CSS3 (Vanilla), JavaScript (Vanilla)
-- **Icons:** Material Icons
-- **Charts:** Chart.js
-
-## 📦 Installation & Setup
-
-1.  **Clone the repository:**
-    ```bash
-    git clone <your-repo-url>
-    ```
-2.  **Database Setup:**
-    - Create a database named `oms` in your MySQL server (e.g., via phpMyAdmin).
-    - Import `backend/oms.sql` to initialize the core schema.
-    - Import `backend/rbac_migration.sql` to set up RBAC tables.
-3.  **Configuration:**
-    - Update `backend/db.php` with your database credentials (host, user, password).
-4.  **Local Access:**
-    - Place the project in your web server's root (e.g., `htdocs` for XAMPP).
-    - Access via `http://localhost/frenz_v6/`.
-
-## 🔐 Default Accounts
+## 🔐 Default Accounts (For Demo)
 
 | Role | Username | Password |
 | :--- | :--- | :--- |
@@ -55,15 +34,34 @@ To allow for a functional demo on Vercel, the application includes a **Mock/Demo
 | **Staff** | `staff` | `staff123` |
 | **Supplier** | `supplier` | `supplier123` |
 
+## 🛠️ Tech Stack
+
+- **Backend:** PHP 8.x (for local environment)
+- **Database:** MySQL (for local environment)
+- **Frontend:** HTML5, CSS3 (Vanilla), JavaScript (Vanilla)
+- **Icons:** Material Icons
+- **Charts:** Chart.js
+
+## 📦 Installation & Setup (Local)
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/frenxpog1/IM_2.git
+    ```
+2.  **Database Setup:**
+    - Create a database named `oms` in your MySQL server.
+    - Import `backend/oms.sql` and `backend/rbac_migration.sql` to initialize the schema.
+3.  **Configuration:**
+    - Update `backend/db.php` with your local database credentials.
+4.  **Local Access:**
+    - Place the project in your web server's root (e.g., `htdocs` for XAMPP).
+    - Access via `http://localhost/IM_2/`.
+
 ## 📂 Project Structure
 
 - `backend/`: PHP API endpoints and database logic.
-- `js/`: Frontend logic (RBAC, Inventory, Orders).
+- `js/`: Frontend logic (RBAC, Inventory, Orders, Mock Data).
 - `css/`: Styling and layout.
 - `index.html`: Entry point (redirects to login).
 - `dashboard.html`: Main overview for Admin/Staff.
 - `inventory.html`: Inventory management and Supplier view.
-
-## 📝 License
-
-This project is for internal use at Twirly Tails.
