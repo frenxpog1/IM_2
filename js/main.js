@@ -7,17 +7,40 @@ navLinks.forEach(link => {
 });
 
 // Check if we are running in a mock/demo environment (like Vercel)
-const IS_MOCK_MODE = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('github.io') || window.location.port === '5500';
+window.IS_MOCK_MODE = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('github.io') || window.location.port === '5500';
 
 // Mock Data for Demo
-const MOCK_USERS = {
-  'admin': { id: 1, username: 'admin', role: 1, full_name: 'Demo Admin', email: 'admin@demo.com' },
-  'staff': { id: 2, username: 'staff', role: 2, full_name: 'Demo Staff', email: 'staff@demo.com' },
-  'supplier': { id: 3, username: 'supplier', role: 3, full_name: 'Demo Supplier', email: 'supplier@demo.com', supplier_id: 1 }
+window.MOCK_DATA = {
+  users: {
+    'admin': { id: 1, username: 'admin', role: 1, full_name: 'Demo Admin', email: 'admin@demo.com' },
+    'staff': { id: 2, username: 'staff', role: 2, full_name: 'Demo Staff', email: 'staff@demo.com' },
+    'supplier': { id: 3, username: 'supplier', role: 3, full_name: 'Demo Supplier', email: 'supplier@demo.com', supplier_id: 1 }
+  },
+  inventory: [
+    { id: 1, product_name: 'Dog Kibble (Adult)', current_stock: 45, supplier_name: 'Pet Supplies Plus', unit_price: 25.50, pending_requests: 0 },
+    { id: 2, product_name: 'Cat Litter (Scented)', current_stock: 8, supplier_name: 'Pet Supplies Plus', unit_price: 15.00, pending_requests: 1 },
+    { id: 3, product_name: 'Chew Toy (Bone)', current_stock: 0, supplier_name: 'Pet Supplies Plus', unit_price: 5.99, pending_requests: 2 },
+    { id: 4, product_name: 'Bird Seed Mix', current_stock: 100, supplier_name: 'Pet Supplies Plus', unit_price: 12.00, pending_requests: 0 }
+  ],
+  orders: [
+    { id: 1, date: '2025-07-20', customer_name: 'John Doe', total_amount: 150.00, status: 'Completed' },
+    { id: 2, date: '2025-07-21', customer_name: 'Jane Smith', total_amount: 45.00, status: 'Pending' },
+    { id: 3, date: '2025-07-22', customer_name: 'Bob Wilson', total_amount: 89.99, status: 'Processing' }
+  ],
+  suppliers: [
+    { id: 1, name: 'Pet Supplies Plus', contact_person: 'Alice Johnson', email: 'alice@petsupplies.com', phone: '555-0101', city: 'Manila' },
+    { id: 2, name: 'Wholesome Paws', contact_person: 'Bob Smith', email: 'bob@wholesome.com', phone: '555-0102', city: 'Cebu' }
+  ],
+  analytics: {
+    total_sales: 12540.50,
+    total_orders: 142,
+    low_stock: 5,
+    out_of_stock: 2
+  }
 };
 
 // --- DEMO MODE UI ENHANCEMENTS ---
-if (IS_MOCK_MODE) {
+if (window.IS_MOCK_MODE) {
   document.addEventListener('DOMContentLoaded', function() {
     // Add Demo Banner
     const banner = document.createElement('div');
@@ -61,13 +84,13 @@ if (loginForm) {
     try {
       let data;
       
-      if (IS_MOCK_MODE) {
+      if (window.IS_MOCK_MODE) {
         // --- MOCK LOGIN FOR DEMO ---
         console.log('Running in MOCK MODE');
         await new Promise(resolve => setTimeout(resolve, 800)); // Simulate lag
         
-        if (MOCK_USERS[username] && password.includes('123')) {
-          data = { success: true, user: MOCK_USERS[username] };
+        if (window.MOCK_DATA.users[username] && password.includes('123')) {
+          data = { success: true, user: window.MOCK_DATA.users[username] };
         } else {
           data = { success: false, error: 'Invalid demo credentials. Try admin/admin123' };
         }

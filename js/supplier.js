@@ -496,7 +496,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function fetchSuppliers(q = '') {
-    fetch('backend/suppliers.php?action=' + (q ? 'search&q=' + encodeURIComponent(q) : 'list'))
+    if (window.IS_MOCK_MODE) {
+      console.log('Fetching mock suppliers');
+      renderSuppliers(window.MOCK_DATA.suppliers);
+      return;
+    }
+    const url = 'backend/suppliers.php?action=' + (q ? 'search&q=' + encodeURIComponent(q) : 'list');
+
       .then(r => r.json())
       .then(data => {
         let allSuppliers = data.suppliers || [];

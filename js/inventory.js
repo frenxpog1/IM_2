@@ -37,6 +37,11 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   function fetchInventory() {
+    if (window.IS_MOCK_MODE) {
+      console.log('Fetching mock inventory');
+      renderInventory(window.MOCK_DATA.inventory);
+      return;
+    }
     fetch('backend/inventory.php?action=list')
       .then(r => r.json())
       .then(data => {

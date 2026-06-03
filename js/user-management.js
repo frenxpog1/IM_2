@@ -59,8 +59,15 @@ function setupEventListeners() {
   if (userRole) userRole.addEventListener('change', handleRoleChange);
 }
 
-function loadUsers() {
+function fetchUsers() {
+  if (window.IS_MOCK_MODE) {
+    console.log('Fetching mock users');
+    const mockUsers = Object.values(window.MOCK_DATA.users);
+    renderUsers(mockUsers);
+    return;
+  }
   fetch('backend/users.php')
+
     .then(response => {
       if (response.status === 401) {
         // Authentication required - redirect to login

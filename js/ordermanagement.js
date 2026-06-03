@@ -48,6 +48,12 @@ class OrderManager {
     }
 
     async loadOrders() {
+        if (window.IS_MOCK_MODE) {
+            console.log('Loading mock orders');
+            this.orders = window.MOCK_DATA.orders;
+            this.filteredOrders = [...this.orders];
+            return;
+        }
         try {
             const response = await fetch('backend/orders.php');
             if (!response.ok) {

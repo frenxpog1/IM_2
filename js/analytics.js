@@ -95,6 +95,68 @@ function setupExportButtons() {
 }
 
 async function loadAnalyticsData(startDate = null, endDate = null) {
+    if (window.IS_MOCK_MODE) {
+        console.log('Using mock analytics data');
+        const mock = window.MOCK_DATA.analytics;
+        
+        analyticsData = {
+            total_revenue: mock.total_sales,
+            total_orders: mock.total_orders,
+            avg_order_value: mock.total_sales / mock.total_orders,
+            active_customers: 25,
+            total_revenue_change: 12.5,
+            total_orders_change: 8.2,
+            active_customers_change: 5.4,
+            revenue_trend: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                data: [1200, 1900, 1500, 2100, 1800, 2400, 1600]
+            },
+            order_status_distribution: {
+                labels: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+                data: [15, 25, 40, 55, 7]
+            },
+            top_products: {
+                labels: ['Dog Kibble', 'Cat Litter', 'Chew Toy', 'Bird Seed', 'Treats'],
+                data: [45, 32, 28, 22, 15]
+            },
+            inventory_data: {
+                labels: ['Dog Kibble', 'Cat Litter', 'Chew Toy', 'Bird Seed', 'Treats'],
+                data: [45, 8, 0, 100, 15]
+            },
+            top_customers: [
+                { name: 'John Doe', orders: 12, total_spent: 1250.00, last_order: '2025-07-20' },
+                { name: 'Jane Smith', orders: 8, total_spent: 850.50, last_order: '2025-07-21' }
+            ],
+            product_performance: [
+                { name: 'Dog Kibble (Adult)', units_sold: 45, revenue: 1147.50, stock_level: 45 },
+                { name: 'Cat Litter (Scented)', units_sold: 28, revenue: 420.00, stock_level: 8 },
+                { name: 'Chew Toy (Bone)', units_sold: 15, revenue: 89.85, stock_level: 0 }
+            ],
+            supplier_analytics: {
+                total_suppliers: 5,
+                total_purchase_orders: 12,
+                total_suppliers_change: 5,
+                total_purchase_orders_change: 10,
+                purchase_order_status: {
+                    labels: ['Draft', 'Sent', 'Confirmed', 'Shipped', 'Delivered'],
+                    data: [2, 3, 4, 2, 1]
+                },
+                top_suppliers: {
+                    labels: ['Pet Supplies Plus', 'Wholesome Paws', 'Bird World'],
+                    data: [5400, 3200, 1200],
+                    suppliers: [
+                        { name: 'Pet Supplies Plus', orders: 8, total_spent: 5400, avg_order_value: 675 },
+                        { name: 'Wholesome Paws', orders: 3, total_spent: 3200, avg_order_value: 1066 }
+                    ]
+                }
+            }
+        };
+        
+        updateMetrics();
+        createCharts();
+        updateTables();
+        return;
+    }
     try {
         // Show loading state
         document.body.classList.add('loading');
