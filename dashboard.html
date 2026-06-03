@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/rbac.js"></script>
+  <style>
+    .rbac-hidden {
+      display: none !important;
+    }
+
+    .rbac-disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* Role-based visibility classes will be controlled by RBAC JavaScript */
+
+    .user-info {
+      color: #666;
+      font-size: 0.9em;
+      margin-right: 15px;
+    }
+
+    .user-info .username {
+      font-weight: 600;
+    }
+
+    .user-info .role {
+      background: #e3f2fd;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Notification Area -->
+  <header>
+    <nav>
+      <span class="nav-brand"><span class="material-icons">dashboard</span> Twirly Tails OMS</span>
+      <ul>
+        <li><a href="dashboard.html" class="active" data-nav="dashboard"><span
+              class="material-icons">dashboard</span>Dashboard</a></li>
+        <li><a href="orders.html" data-nav="orders"><span class="material-icons">shopping_cart</span>Orders</a></li>
+        <li><a href="inventory.html" data-nav="inventory"><span class="material-icons">inventory_2</span>Inventory</a>
+        </li>
+        <li><a href="report.html" data-nav="analytics"><span class="material-icons">analytics</span>Analytics</a></li>
+        <li><a href="user.html" data-nav="users"><span class="material-icons">group</span>Users</a></li>
+        <li><a href="supplier.html" data-nav="suppliers"><span class="material-icons">local_shipping</span>Suppliers</a>
+        </li>
+        <li><a href="#" id="logoutBtn"><span class="material-icons">logout</span>Logout</a></li>
+      </ul>
+      <div class="user-info" id="user-info">
+        <!-- User info will be populated by RBAC -->
+      </div>
+      <button class="nav-notification-bell" id="notificationBell">
+        <span class="material-icons">notifications</span>
+        <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+      </button>
+      <div class="notification-dropdown" id="notificationDropdown">
+        <div class="notification-dropdown-header">
+          <h3>Notifications</h3>
+          <button class="clear-all-btn" onclick="clearAllNotifications()">Clear all</button>
+        </div>
+        <div class="notification-dropdown-content" id="notificationList">
+          <!-- Notifications will be populated here -->
+        </div>
+        <div class="notification-dropdown-footer">
+          <button class="view-all-btn" onclick="viewAllNotifications()">View all notifications</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Notification Container -->
+    <div class="notification-container"></div>
+
+    <!-- Dashboard Summary -->
+    <section id="dashboard-summary">
+      <h2>Business Overview</h2>
+      <div class="summary-cards">
+        <div class="card">
+          <div class="card-icon">📦</div>
+          <div class="card-content">
+            <h3>Total Orders</h3>
+            <span id="totalOrders">0</span>
+            <span id="totalOrdersChange" class="card-change" style="display: none;"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">💰</div>
+          <div class="card-content">
+            <h3>Total Sales</h3>
+            <span id="totalSales">₱0.00</span>
+            <span id="totalSalesChange" class="card-change" style="display: none;"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚠️</div>
+          <div class="card-content">
+            <h3>Low Stock Items</h3>
+            <span id="lowStock">-</span>
+            <span id="lowStockChange" class="card-change" style="display: none;"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">👥</div>
+          <div class="card-content">
+            <h3>Active Customers</h3>
+            <span id="activeCustomers">0</span>
+            <span id="activeCustomersChange" class="card-change" style="display: none;"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🚚</div>
+          <div class="card-content">
+            <h3>Active Suppliers</h3>
+            <span id="activeSuppliers">0</span>
+            <span id="activeSuppliersChange" class="card-change" style="display: none;"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📋</div>
+          <div class="card-content">
+            <h3>Purchase Orders</h3>
+            <span id="purchaseOrders">0</span>
+            <span id="purchaseOrdersChange" class="card-change" style="display: none;"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Analytics Section -->
+    <section id="dashboard-analytics">
+      <div class="analytics-header">
+        <h2>Quick Analytics</h2>
+        <a href="report.html" class="view-full-analytics">
+          <span class="material-icons">analytics</span>
+          View Full Analytics
+        </a>
+      </div>
+
+      <div class="analytics-grid">
+        <!-- Revenue Trend Mini Chart -->
+        <div class="analytics-card">
+          <h3>Revenue Trend (Last 7 Days)</h3>
+          <canvas id="revenueTrendChart" width="300" height="150"></canvas>
+        </div>
+
+        <!-- Order Status Distribution -->
+        <div class="analytics-card">
+          <h3>Order Status</h3>
+          <canvas id="orderStatusChart" width="300" height="150"></canvas>
+        </div>
+
+        <!-- Top Products -->
+        <div class="analytics-card">
+          <div class="card-header">
+            <h3>Top Products</h3>
+            <a href="report.html" class="view-more-link">View All</a>
+          </div>
+          <div id="topProductsList" class="top-products-list">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="analytics-card">
+          <div class="card-header">
+            <h3>Recent Activity</h3>
+            <a href="orders.html" class="view-more-link">View All</a>
+          </div>
+          <div id="recentActivity" class="recent-activity">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Top Suppliers -->
+        <div class="analytics-card">
+          <div class="card-header">
+            <h3>Top Suppliers</h3>
+            <a href="supplier.html" class="view-more-link">View All</a>
+          </div>
+          <div id="topSuppliersList" class="top-suppliers-list">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Purchase Order Status -->
+        <div class="analytics-card">
+          <h3>Purchase Order Status</h3>
+          <canvas id="purchaseOrderStatusChart" width="300" height="150"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Actions Section -->
+    <section id="quick-actions">
+      <h2>Quick Actions</h2>
+      <div class="action-buttons">
+        <a href="orders.html" class="action-btn" data-action="create" data-module="orders">
+          <span class="material-icons">add_shopping_cart</span>
+          <span>Create Order</span>
+        </a>
+        <a href="inventory.html" class="action-btn" data-action="update" data-module="inventory">
+          <span class="material-icons">add_box</span>
+          <span>Add Inventory</span>
+        </a>
+        <a href="report.html" class="action-btn" data-action="view" data-module="analytics">
+          <span class="material-icons">assessment</span>
+          <span>View Reports</span>
+        </a>
+        <a href="user.html" class="action-btn admin-only" data-action="create" data-module="users">
+          <span class="material-icons">person_add</span>
+          <span>Add User</span>
+        </a>
+        <a href="supplier.html" class="action-btn" data-action="update" data-module="suppliers">
+          <span class="material-icons">local_shipping</span>
+          <span>Manage Suppliers</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/error-handler.js"></script>
+  <script src="js/dashboard-analytics.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Debug script to check if dashboard loads
+    console.log('Dashboard page loaded successfully');
+    console.log('Current user:', localStorage.getItem('oms_user'));
+    console.log('Current role:', localStorage.getItem('oms_role'));
+    
+    // Load basic dashboard stats
+    async function loadDashboardStats() {
+      try {
+        const response = await fetch('backend/dashboard.php');
+        const data = await response.json();
+        
+        console.log('Dashboard stats loaded:', data);
+        
+        if (data.success && data.stats) {
+          // Update the stat cards with actual data
+          const stats = data.stats;
+          
+          // Update total orders
+          const totalOrdersEl = document.getElementById('totalOrders');
+          if (totalOrdersEl) totalOrdersEl.textContent = stats.total_orders || 0;
+          
+          // Update total sales
+          const totalSalesEl = document.getElementById('totalSales');
+          if (totalSalesEl) totalSalesEl.textContent = '₱' + (stats.total_sales || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+          
+          // Update low stock - this is the key fix
+          const lowStockEl = document.getElementById('lowStock');
+          if (lowStockEl) lowStockEl.textContent = stats.low_stock || 0;
+          
+          // Update active customers
+          const activeCustomersEl = document.getElementById('activeCustomers');
+          if (activeCustomersEl) activeCustomersEl.textContent = stats.active_customers || 0;
+          
+          // Update active suppliers
+          const activeSuppliersEl = document.getElementById('activeSuppliers');
+          if (activeSuppliersEl) activeSuppliersEl.textContent = stats.active_suppliers || 0;
+          
+          // Update purchase orders
+          const purchaseOrdersEl = document.getElementById('purchaseOrders');
+          if (purchaseOrdersEl) purchaseOrdersEl.textContent = stats.purchase_orders || 0;
+        }
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+      }
+    }
+    
+    // Load stats when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wait a bit for RBAC to initialize
+      setTimeout(loadDashboardStats, 1000);
+    });
+  </script>
+</body>
+
+</html>

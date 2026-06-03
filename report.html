@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics & Reports</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="js/rbac.js"></script>
+  <style>
+    /* Status Badge Styles for Purchase Order Analytics */
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .status-delivered { background: #d4edda; color: #155724; }
+    .status-confirmed { background: #cce5ff; color: #004085; }
+    .status-shipped { background: #b8e6e6; color: #0c5460; }
+    .status-sent { background: #e2d9f3; color: #4a148c; }
+    .status-draft { background: #e2e3e5; color: #383d41; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    .status-pending { background: #fff3cd; color: #856404; }
+  </style>
+</head>
+<body class="reports-page">
+  <header>
+    <nav>
+      <span class="nav-brand"><span class="material-icons">analytics</span> Twirly Tails OMS</span>
+      <ul>
+        <li><a href="dashboard.html" data-nav="dashboard"><span class="material-icons">dashboard</span>Dashboard</a></li>
+        <li><a href="orders.html" data-nav="orders"><span class="material-icons">shopping_cart</span>Orders</a></li>
+        <li><a href="inventory.html" data-nav="inventory"><span class="material-icons">inventory_2</span>Inventory</a></li>
+        <li><a href="report.html" class="active" data-nav="analytics"><span class="material-icons">analytics</span>Analytics</a></li>
+        <li><a href="user.html" data-nav="users"><span class="material-icons">group</span>Users</a></li>
+        <li><a href="supplier.html" data-nav="suppliers"><span class="material-icons">local_shipping</span>Suppliers</a></li>
+        <li><a href="#" id="logoutBtn"><span class="material-icons">logout</span>Logout</a></li>
+      </ul>
+      <button class="nav-notification-bell" id="notificationBell">
+        <span class="material-icons">notifications</span>
+        <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+      </button>
+      <div class="notification-dropdown" id="notificationDropdown">
+        <div class="notification-dropdown-header">
+          <h3>Notifications</h3>
+          <button class="clear-all-btn" onclick="clearAllNotifications()">Clear all</button>
+        </div>
+        <div class="notification-dropdown-content" id="notificationList">
+          <!-- Notifications will be populated here -->
+        </div>
+        <div class="notification-dropdown-footer">
+          <button class="view-all-btn" onclick="viewAllNotifications()">View all notifications</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Notification Container -->
+    <div class="notification-container"></div>
+    
+    <div class="reports-header">
+      <h1>Analytics & Reports</h1>
+      <div class="date-filter">
+        <label>Date Range:</label>
+        <select id="dateRange">
+          <option value="7">Last 7 Days</option>
+          <option value="30" selected>Last 30 Days</option>
+          <option value="90">Last 3 Months</option>
+          <option value="365">Last Year</option>
+          <option value="all">All Time</option>
+          <option value="custom">Custom Range</option>
+        </select>
+        <div id="customDateRange" style="display: none;">
+          <input type="date" id="startDate">
+          <input type="date" id="endDate">
+          <button id="applyCustomRange">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Metrics Dashboard -->
+    <section class="metrics-dashboard">
+      <div class="metric-card">
+        <div class="metric-icon">📊</div>
+        <div class="metric-content">
+          <h3>Total Revenue</h3>
+          <span class="metric-value" id="totalRevenue">₱0.00</span>
+          <span class="metric-change positive" id="revenueChange">+0%</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">📦</div>
+        <div class="metric-content">
+          <h3>Total Orders</h3>
+          <span class="metric-value" id="totalOrders">0</span>
+          <span class="metric-change positive" id="ordersChange">+0%</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">💰</div>
+        <div class="metric-content">
+          <h3>Average Order Value</h3>
+          <span class="metric-value" id="avgOrderValue">₱0.00</span>
+          <span class="metric-change positive" id="avgOrderChange">+0%</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">👥</div>
+        <div class="metric-content">
+          <h3>Active Customers</h3>
+          <span class="metric-value" id="activeCustomers">0</span>
+          <span class="metric-change positive" id="customersChange">+0%</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">🚚</div>
+        <div class="metric-content">
+          <h3>Active Suppliers</h3>
+          <span class="metric-value" id="activeSuppliers">0</span>
+          <span class="metric-change positive" id="suppliersChange">+0%</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">📋</div>
+        <div class="metric-content">
+          <h3>Purchase Orders</h3>
+          <span class="metric-value" id="purchaseOrders">0</span>
+          <span class="metric-change positive" id="purchaseOrdersChange">+0%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="charts-section">
+      <div class="chart-row">
+        <div class="chart-container">
+          <h3>Revenue Trend</h3>
+          <canvas id="revenueChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Order Status Distribution</h3>
+          <canvas id="orderStatusChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-row">
+        <div class="chart-container">
+          <h3>Top Products by Sales</h3>
+          <canvas id="topProductsChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Inventory Stock Levels</h3>
+          <canvas id="inventoryChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-row">
+        <div class="chart-container">
+          <h3>Purchase Order Status</h3>
+          <canvas id="purchaseOrderStatusChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Top Suppliers by Spend</h3>
+          <canvas id="topSuppliersChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detailed Analytics Tables -->
+    <section class="analytics-tables">
+      <div class="table-container">
+        <h3>Top Customers</h3>
+        <table id="topCustomersTable">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Orders</th>
+              <th>Total Spent</th>
+              <th>Last Order</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Will be populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-container">
+        <h3>Product Performance</h3>
+        <table id="productPerformanceTable">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Units Sold</th>
+              <th>Revenue</th>
+              <th>Stock Level</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Will be populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-container">
+        <h3>Purchase Order Analytics</h3>
+        <table id="purchaseOrderTable">
+          <thead>
+            <tr>
+              <th>PO Number</th>
+              <th>Supplier</th>
+              <th>Order Date</th>
+              <th>Status</th>
+              <th>Total Amount</th>
+              <th>Days Since Order</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Will be populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Export Section -->
+    <section class="export-section">
+      <h3>Export Reports</h3>
+      <div class="export-buttons">
+        <button id="exportSalesCSV" class="btn btn-primary">EXPORT SALES CSV</button>
+        <button id="exportOrdersCSV" class="btn btn-primary">EXPORT ORDERS CSV</button>
+        <button id="exportInventoryCSV" class="btn btn-primary">EXPORT INVENTORY CSV</button>
+        <button id="exportSuppliersCSV" class="btn btn-primary">EXPORT SUPPLIERS CSV</button>
+        <button id="exportFullReport" class="btn btn-secondary">EXPORT FULL REPORT (PDF)</button>
+      </div>
+    </section>
+  </main>
+  
+  <script src="js/analytics.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html> 

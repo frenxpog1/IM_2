@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orders</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="js/rbac.js"></script>
+  <style>
+    .rbac-hidden { display: none !important; }
+    .rbac-disabled { opacity: 0.5; pointer-events: none; }
+    .admin-only, .staff-only { /* Will be controlled by RBAC */ }
+    .user-info { 
+      color: #666; 
+      font-size: 0.9em; 
+      margin-right: 15px;
+    }
+    .user-info .username { font-weight: 600; }
+    .user-info .role { 
+      background: #e3f2fd; 
+      padding: 2px 8px; 
+      border-radius: 12px; 
+      font-size: 0.8em;
+    }
+  </style>
+</head>
+<body class="orders-page">
+  <header>
+    <nav>
+      <span class="nav-brand"><span class="material-icons">shopping_cart</span> Twirly Tails OMS</span>
+      <ul>
+        <li><a href="dashboard.html" data-nav="dashboard"><span class="material-icons">dashboard</span>Dashboard</a></li>
+        <li><a href="orders.html" class="active" data-nav="orders"><span class="material-icons">shopping_cart</span>Orders</a></li>
+        <li><a href="inventory.html" data-nav="inventory"><span class="material-icons">inventory_2</span>Inventory</a></li>
+        <li><a href="report.html" data-nav="analytics"><span class="material-icons">analytics</span>Analytics</a></li>
+        <li><a href="user.html" data-nav="users"><span class="material-icons">group</span>Users</a></li>
+        <li><a href="supplier.html" data-nav="suppliers"><span class="material-icons">local_shipping</span>Suppliers</a></li>
+        <li><a href="#" id="logoutBtn"><span class="material-icons">logout</span>Logout</a></li>
+      </ul>
+      <div class="user-info" id="user-info">
+        <!-- User info will be populated by RBAC -->
+      </div>
+      <button class="nav-notification-bell" id="notificationBell">
+        <span class="material-icons">notifications</span>
+        <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+      </button>
+      <div class="notification-dropdown" id="notificationDropdown">
+        <div class="notification-dropdown-header">
+          <h3>Notifications</h3>
+          <button class="clear-all-btn" onclick="clearAllNotifications()">Clear all</button>
+        </div>
+        <div class="notification-dropdown-content" id="notificationList">
+          <!-- Notifications will be populated here -->
+        </div>
+        <div class="notification-dropdown-footer">
+          <button class="view-all-btn" onclick="viewAllNotifications()">View all notifications</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <!-- Notification Container -->
+    <div class="notification-container"></div>
+    
+    <style>
+      .notification-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+      }
+      
+      .notification {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideIn 0.3s ease-out;
+      }
+      
+      .notification-success {
+        border-left: 4px solid #28a745;
+        background: #d4edda;
+        color: #155724;
+      }
+      
+      .notification-error {
+        border-left: 4px solid #dc3545;
+        background: #f8d7da;
+        color: #721c24;
+      }
+      
+      .notification-warning {
+        border-left: 4px solid #ffc107;
+        background: #fff3cd;
+        color: #856404;
+      }
+      
+      .notification-info {
+        border-left: 4px solid #17a2b8;
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      
+      .notification-close {
+        background: none;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        margin-left: 10px;
+        opacity: 0.7;
+      }
+      
+      .notification-close:hover {
+        opacity: 1;
+      }
+      
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    </style>
+    
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Order Management</h1>
+        <p class="page-subtitle">Manage customer orders, track status, and process transactions</p>
+      </div>
+    </div>
+
+    <!-- Order List -->
+    <section class="content-section">
+      <div class="content-header">
+        <div class="search-section">
+          <div class="search-box">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" id="orderSearch" placeholder="     Search orders..." class=" search-input" style="padding-left: 20px;">
+          </div>
+          <div class="filter-section">
+            <select id="statusFilter" class="filter-select">
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="stats-section">
+          <div class="stats-cards">
+            <div class="stat-card">
+              <span class="stat-number" id="totalOrders">0</span>
+              <span class="stat-label">Total Orders</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number" id="pendingOrders">0</span>
+              <span class="stat-label">Pending</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number" id="totalRevenue">₱0</span>
+              <span class="stat-label">Total Revenue</span>
+            </div>
+          </div>
+          <button id="createOrderBtn" class="btn btn-primary btn-lg" data-action="create" data-module="orders">
+            <span class="material-icons">add_shopping_cart</span>
+            Create New Order
+          </button>
+        </div>
+      </div>
+      
+      <div class="table-container">
+        <div class="table-header">
+          <h3>Order List</h3>
+        </div>
+      <table id="ordersTable">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Status</th>
+            <th>Date</th>
+              <th>Amount</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Orders will be populated by JS -->
+        </tbody>
+      </table>
+      </div>
+    </section>
+    <!-- Create Order Modal -->
+    <div id="orderModal" class="modal" style="display:none;">
+      <div class="modal-content order-modal">
+        <span class="close" id="closeOrderModal">&times;</span>
+        <h2>Create New Order</h2>
+      <form id="createOrderForm">
+          <div class="form-row">
+            <label>Customer Name:
+              <input type="text" id="orderCustomer" placeholder="Enter customer name" required>
+            </label>
+            <label>Customer Contact:
+              <input type="text" id="orderCustomerContact" placeholder="Phone number or email">
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Order Status: 
+              <select name="status" id="orderStatus">
+                <option value="Pending">Pending</option>
+                <option value="Processing">Processing</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </label>
+            <label>Order Notes:
+              <textarea id="orderNotes" placeholder="Add any special instructions or notes..."></textarea>
+            </label>
+          </div>
+          <!-- Product Selection Section -->
+          <div class="product-selection">
+            <div class="section-header">
+              <h3>Order Items</h3>
+              <button type="button" id="addProductRow" class="btn btn-secondary btn-sm">
+                <span class="material-icons">add</span> Add Product
+              </button>
+            </div>
+            <div class="order-items-header">
+              <span>Product</span>
+              <span>Quantity</span>
+              <span>Unit Price</span>
+              <span>Total</span>
+              <span>Action</span>
+            </div>
+            <div id="orderItems">
+              <!-- JS will add the first order-item-row dynamically -->
+            </div>
+          </div>
+          
+          <div class="order-summary">
+            <h3>Order Summary</h3>
+            <div class="summary-row">
+              <span>Total Amount:</span>
+              <span id="orderTotalAmount">₱0.00</span>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create Order</button>
+            <button type="button" class="btn btn-secondary" id="cancelOrderModal" onclick="document.getElementById('orderModal').style.display='none'">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal" style="display:none;">
+      <div class="modal-content order-details-modal">
+        <span class="close" id="closeOrderDetailsModal">&times;</span>
+        <h2>Order Details</h2>
+        <div id="orderDetailsContent">
+          <!-- Order Header Information -->
+          <div class="order-header">
+            <div class="order-id-section">
+              <h3>Order #<span id="detailOrderId"></span></h3>
+              <span class="order-status-badge" id="detailStatusBadge"></span>
+            </div>
+            <div class="order-date">
+              <strong>Order Date:</strong> <span id="detailDate"></span>
+            </div>
+            <div class="order-amount">
+              <strong>Order Amount (with Tax):</strong> <span id="detailAmountWithTax"></span>
+            </div>
+          </div>
+
+          <!-- Customer Information -->
+          <div class="order-section">
+            <h3>Customer Information</h3>
+            <div class="customer-info">
+              <div class="info-row">
+                <span class="label">Name:</span>
+                <span id="detailCustomer"></span>
+              </div>
+              <div class="info-row">
+                <span class="label">Contact:</span>
+                <span id="detailCustomerContact">Not provided</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Email:</span>
+                <span id="detailCustomerEmail">Not provided</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Summary -->
+          <div class="order-section">
+            <h3>Order Summary</h3>
+            <div id="orderSummaryDynamic"></div>
+          </div>
+
+          <!-- Order Items Details -->
+          <div class="order-section">
+            <h3>Order Items</h3>
+            <div class="order-items-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
+                    <th>Stock Status</th>
+                  </tr>
+                </thead>
+                <tbody id="orderItemsDetail">
+                  <!-- Order items will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Order Notes -->
+          <div class="order-section">
+            <h3>Order Notes</h3>
+            <div class="order-notes">
+              <textarea id="orderDetailsNotes" placeholder="Add notes about this order..."></textarea>
+              <button id="saveNotesBtn" class="btn btn-secondary btn-sm">Save Notes</button>
+            </div>
+          </div>
+
+          <!-- Order Actions -->
+          <div class="order-section">
+            <h3>Order Management</h3>
+            <div class="order-actions-grid">
+              <div class="action-group">
+                <h4>Update Status</h4>
+                <select id="updateStatusSelect">
+                  <option value="Pending">Pending</option>
+                  <option value="Processing">Processing</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+                <button id="updateStatusBtn" class="btn btn-primary btn-sm">Update Status</button>
+              </div>
+              
+              <div class="action-group">
+                <h4>Order Actions</h4>
+                <button id="editOrderBtn" class="btn btn-secondary btn-sm" data-action="update" data-module="orders">Edit Order</button>
+                <button id="printOrderBtn" class="btn btn-secondary btn-sm" data-action="read" data-module="orders">Print Order</button>
+                <button id="deleteOrderBtn" class="btn btn-danger btn-sm" data-action="delete" data-module="orders">Delete Order</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Order Modal -->
+    <div id="editOrderModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="closeEditOrderModal">&times;</span>
+        <h2>Edit Order</h2>
+        <form id="editOrderForm">
+          <input type="hidden" id="editOrderId">
+        <label>Customer:
+            <input type="text" id="editOrderCustomer" required>
+        </label><br>
+        <label>Status: 
+            <select name="status" id="editOrderStatus">
+            <option value="Pending">Pending</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </label><br>
+          <label>Date: 
+            <input type="date" id="editOrderDate" required>
+          </label><br>
+          <label>Total Amount (₱): 
+            <input type="number" id="editOrderAmount" min="0" step="0.01" required>
+          </label><br>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update</button>
+            <button type="button" class="btn btn-secondary" id="cancelEditOrderModal" onclick="document.getElementById('editOrderModal').style.display='none'">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Order Management now handled by ordermanagement.js -->
+  <script src="js/error-handler.js"></script>
+  <script src="js/ordermanagement.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html> 

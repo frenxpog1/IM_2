@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Twirly Tails OMS</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    body.login-bg {
+      min-height: 100vh;
+      background: linear-gradient(120deg, #7f53ff 0%, #5b3df5 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      background: rgba(255,255,255,0.85); /* glassmorphism effect */
+      border-radius: 18px;
+      box-shadow: 0 2px 12px rgba(91,61,245,0.07); /* more subtle shadow */
+      border: 1.5px solid #ececff;
+      padding: 40px 36px 32px 36px;
+      max-width: 370px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      backdrop-filter: blur(4px);
+      animation: fadeInUp 0.7s;
+    }
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 2em;
+      font-weight: 700;
+      color: #5b3df5;
+      margin-bottom: 8px;
+    }
+    .login-welcome {
+      color: #444;
+      font-size: 1.1em;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .login-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      background: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    .login-field {
+      display: flex;
+      align-items: center;
+      background: #f8f9fd;
+      border-radius: 7px;
+      padding: 0 12px;
+      border: 1.5px solid #e0e0e0;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    .login-field:focus-within {
+      border: 1.5px solid #5b3df5;
+      box-shadow: 0 0 0 2px #e7e9fc;
+    }
+    .login-field .material-icons {
+      color: #b3b3b3;
+      margin-right: 8px;
+      font-size: 1.3em;
+    }
+    .login-field input, .login-field select {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 1em;
+      padding: 12px 0;
+      width: 100%;
+      color: #222;
+    }
+    .login-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px 0;
+      font-size: 1.1em;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #5b3df5 60%, #7f53ff 100%);
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      box-shadow: 0 2px 8px rgba(91,61,245,0.08);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .login-btn:hover {
+      background: linear-gradient(90deg, #7f53ff 60%, #5b3df5 100%);
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 4px 16px rgba(91,61,245,0.13);
+    }
+    @media (max-width: 600px) {
+      .login-card {
+        padding: 18px 6px 18px 6px;
+      }
+    }
+  </style>
+</head>
+<body class="login-bg">
+  <!-- Notification Container -->
+  <div class="notification-container"></div>
+  
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="material-icons">pets</span> Twirly Tails OMS
+    </div>
+    <div class="login-welcome">
+      Welcome! Please sign in to manage orders and inventory.
+    </div>
+    <form id="loginForm" class="login-form">
+      <div class="login-field">
+        <span class="material-icons">person</span>
+        <input type="text" id="username" name="username" placeholder="Username" required>
+      </div>
+      <div class="login-field">
+        <span class="material-icons">lock</span>
+        <input type="password" id="password" name="password" placeholder="Password" required>
+      </div>
+      <button type="submit" class="login-btn">Login</button>
+      <!-- TODO: Integrate with backend authentication -->
+    </form>
+  </div>
+  <script src="js/main.js"></script>
+</body>
+</html> 

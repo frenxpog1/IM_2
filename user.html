@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="js/rbac.js"></script>
+  <style>
+    .rbac-hidden {
+      display: none !important;
+    }
+
+    .rbac-disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .user-info {
+      color: #666;
+      font-size: 0.9em;
+      margin-right: 15px;
+    }
+
+    .user-info .username {
+      font-weight: 600;
+    }
+
+    .user-info .role {
+      background: #e3f2fd;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+    }
+
+    /* User management is admin-only */
+    body:not(.admin-access) .content-section {
+      display: none;
+    }
+
+    body:not(.admin-access)::after {
+      content: "Access Denied: Admin privileges required";
+      display: block;
+      text-align: center;
+      padding: 50px;
+      font-size: 1.2em;
+      color: #721c24;
+      background: #f8d7da;
+      margin: 20px;
+      border-radius: 4px;
+    }
+
+    /* Enhanced Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-header {
+      padding: 24px 24px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #6b7280;
+      transition: all 0.2s;
+    }
+
+    .modal-close-btn:hover {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #374151;
+      font-size: 0.875rem;
+    }
+
+    .required {
+      color: #ef4444;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-control:invalid {
+      border-color: #ef4444;
+    }
+
+    .form-text {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 4px;
+      display: block;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .modal-actions .btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .modal-actions .btn-primary {
+      background: #3b82f6;
+      color: white;
+      border: none;
+    }
+
+    .modal-actions .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    .modal-actions .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+
+    .modal-actions .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+
+    .modal-actions .btn-danger {
+      background: #ef4444;
+      color: white;
+      border: none;
+    }
+
+    .modal-actions .btn-danger:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+
+    /* Role and status badges */
+    .role-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .role-1 {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .role-2 {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .role-3 {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .status-active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-inactive {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .modal-container {
+        width: 95%;
+        margin: 20px;
+      }
+
+      .modal-actions {
+        flex-direction: column;
+      }
+
+      .modal-actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <span class="nav-brand"><span class="material-icons">group</span> Twirly Tails OMS</span>
+      <ul>
+        <li><a href="dashboard.html" data-nav="dashboard"><span class="material-icons">dashboard</span>Dashboard</a>
+        </li>
+        <li><a href="orders.html" data-nav="orders"><span class="material-icons">shopping_cart</span>Orders</a></li>
+        <li><a href="inventory.html" data-nav="inventory"><span class="material-icons">inventory_2</span>Inventory</a>
+        </li>
+        <li><a href="report.html" data-nav="analytics"><span class="material-icons">analytics</span>Analytics</a></li>
+        <li><a href="user.html" class="active" data-nav="users"><span class="material-icons">group</span>Users</a></li>
+        <li><a href="supplier.html" data-nav="suppliers"><span class="material-icons">local_shipping</span>Suppliers</a>
+        </li>
+        <li><a href="#" id="logoutBtn"><span class="material-icons">logout</span>Logout</a></li>
+      </ul>
+      <div class="user-info" id="user-info">
+        <!-- User info will be populated by RBAC -->
+      </div>
+      <button class="nav-notification-bell" id="notificationBell">
+        <span class="material-icons">notifications</span>
+        <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+      </button>
+      <div class="notification-dropdown" id="notificationDropdown">
+        <div class="notification-dropdown-header">
+          <h3>Notifications</h3>
+          <button class="clear-all-btn" onclick="clearAllNotifications()">Clear all</button>
+        </div>
+        <div class="notification-dropdown-content" id="notificationList">
+          <!-- Notifications will be populated here -->
+        </div>
+        <div class="notification-dropdown-footer">
+          <button class="view-all-btn" onclick="viewAllNotifications()">View all notifications</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <div class="notification-container"></div>
+    <section class="content-section">
+      <div class="page-header">
+        <div class="header-left">
+          <h1>User Management</h1>
+          <p class="page-subtitle">Manage system users, roles, and permissions</p>
+        </div>
+        <div class="header-right">
+          <button id="addUserBtn" class="btn btn-primary" data-action="create" data-module="users"><span
+              class="material-icons">person_add</span> Add User</button>
+        </div>
+      </div>
+      <div class="search-section">
+        <input type="text" id="userSearch" placeholder="Search users..." class="search-input">
+        <select id="roleFilter">
+          <option value="">All Roles</option>
+          <option value="1">Admin</option>
+          <option value="2">Staff</option>
+          <option value="3">Supplier</option>
+        </select>
+        <select id="statusFilter">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <button id="refreshUsers" class="btn btn-secondary">Refresh</button>
+      </div>
+      <div class="table-container">
+        <table id="userTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Email</th>
+              <th>Full Name</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="modal-overlay" style="display:none;">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2 id="userModalTitle">Add New User</h2>
+          <button type="button" id="closeUserModal" class="modal-close-btn">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="userForm">
+            <input type="hidden" id="userId">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="userName">Username <span class="required">*</span></label>
+                <input type="text" id="userName" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="userRole">Role <span class="required">*</span></label>
+                <select id="userRole" class="form-control" required>
+                  <option value="1">Admin</option>
+                  <option value="2">Staff</option>
+                  <option value="3">Supplier</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="userPassword">Password</label>
+                <input type="password" id="userPassword" class="form-control">
+                <small class="form-text">Leave blank to keep current password when editing</small>
+              </div>
+              <div class="form-group">
+                <label for="userPasswordConfirm">Confirm Password</label>
+                <input type="password" id="userPasswordConfirm" class="form-control">
+              </div>
+            </div>
+
+            <div id="supplierSelectionLabel" class="form-group" style="display:none;">
+              <label for="userSupplier">Supplier <span class="required">*</span></label>
+              <select id="userSupplier" class="form-control">
+                <option value="">Select Supplier</option>
+                <!-- Suppliers will be populated by JavaScript -->
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="userEmail">Email</label>
+                <input type="email" id="userEmail" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="userFullName">Full Name</label>
+                <input type="text" id="userFullName" class="form-control">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="userStatus">Status</label>
+              <select id="userStatus" class="form-control">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="userNotes">Notes</label>
+              <textarea id="userNotes" class="form-control" rows="3"
+                placeholder="Optional notes about this user..."></textarea>
+            </div>
+
+            <div class="modal-actions">
+              <button type="submit" class="btn btn-primary">
+                <span class="material-icons">save</span>
+                Save User
+              </button>
+              <button type="button" class="btn btn-secondary" id="cancelUserBtn">
+                <span class="material-icons">cancel</span>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- User Stats -->
+    <div class="user-stats" style="margin: 1rem 0;">
+      <span>Total Users: <span id="totalUsers">0</span></span>
+      <span style="margin-left:1.5rem;">Active: <span id="activeUsers">0</span></span>
+      <span style="margin-left:1.5rem;">Admins: <span id="adminUsers">0</span></span>
+    </div>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteUserModal" class="modal-overlay" style="display:none;">
+      <div class="modal-container" style="max-width: 400px;">
+        <div class="modal-header">
+          <h2>Confirm Delete</h2>
+        </div>
+        <div class="modal-body">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <span class="material-icons" style="color: #ef4444; font-size: 2rem;">warning</span>
+            <div>
+              <p style="margin: 0; font-weight: 500;">Are you sure you want to delete user <strong><span
+                    id="deleteUserName"></span></strong>?</p>
+              <p style="margin: 4px 0 0; font-size: 0.875rem; color: #6b7280;">This action cannot be undone.</p>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button id="confirmDeleteUser" class="btn btn-danger">
+              <span class="material-icons">delete</span>
+              Delete User
+            </button>
+            <button id="cancelDeleteUser" class="btn btn-secondary">
+              <span class="material-icons">cancel</span>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/user-management.js"></script>
+  <script src="js/main.js"></script>
+</body>
+
+</html>

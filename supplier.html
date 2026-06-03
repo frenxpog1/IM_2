@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplier Management</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="js/rbac.js"></script>
+  <style>
+    .rbac-hidden {
+      display: none !important;
+    }
+
+    .rbac-disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* Admin and staff-only elements will be controlled by RBAC JavaScript */
+
+    .user-info {
+      color: #666;
+      font-size: 0.9em;
+      margin-right: 15px;
+    }
+
+    .user-info .username {
+      font-weight: 600;
+    }
+
+    .user-info .role {
+      background: #e3f2fd;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <span class="nav-brand"><span class="material-icons">local_shipping</span> Twirly Tails OMS</span>
+      <ul>
+        <li><a href="dashboard.html" data-nav="dashboard"><span class="material-icons">dashboard</span>Dashboard</a>
+        </li>
+        <li><a href="orders.html" data-nav="orders"><span class="material-icons">shopping_cart</span>Orders</a></li>
+        <li><a href="inventory.html" data-nav="inventory"><span class="material-icons">inventory_2</span>Inventory</a>
+        </li>
+        <li><a href="report.html" data-nav="analytics"><span class="material-icons">analytics</span>Analytics</a></li>
+        <li><a href="user.html" data-nav="users"><span class="material-icons">group</span>Users</a></li>
+        <li><a href="supplier.html" class="active" data-nav="suppliers"><span
+              class="material-icons">local_shipping</span>Suppliers</a></li>
+        <li><a href="#" id="logoutBtn"><span class="material-icons">logout</span>Logout</a></li>
+      </ul>
+      <div class="user-info" id="user-info">
+        <!-- User info will be populated by RBAC -->
+      </div>
+      <button class="nav-notification-bell" id="notificationBell">
+        <span class="material-icons">notifications</span>
+        <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+      </button>
+      <div class="notification-dropdown" id="notificationDropdown">
+        <div class="notification-dropdown-header">
+          <h3>Notifications</h3>
+          <button class="clear-all-btn" onclick="clearAllNotifications()">Clear all</button>
+        </div>
+        <div class="notification-dropdown-content" id="notificationList">
+          <!-- Notifications will be populated here -->
+        </div>
+        <div class="notification-dropdown-footer">
+          <button class="view-all-btn" onclick="viewAllNotifications()">View all notifications</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Supplier Management</h1>
+
+    <!-- Navigation Tabs -->
+    <div class="section-header">
+      <div class="tab-navigation">
+        <button class="tab-btn active" data-tab="suppliers">Suppliers</button>
+        <button class="tab-btn" data-tab="products">Products</button>
+        <button class="tab-btn" data-tab="orders">Purchase Orders</button>
+        <button class="tab-btn" data-tab="restock-requests" id="restockRequestsTab" style="display: none;">Restock
+          Requests</button>
+      </div>
+      <button id="addSupplierBtn" class="btn">
+        <span class="material-icons">add</span>
+        <span>Add Supplier</span>
+      </button>
+    </div>
+
+    <!-- Suppliers Tab -->
+    <section id="suppliers-tab" class="tab-content active">
+      <div class="search-section">
+        <input type="text" id="supplierSearch" placeholder="Search suppliers..." class="search-input">
+      </div>
+      <table id="supplierTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Contact Person</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>City</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Products Tab -->
+    <section id="products-tab" class="tab-content">
+      <div class="search-section">
+        <select id="productSupplierFilter" class="filter-select">
+          <option value="">All Suppliers</option>
+        </select>
+        <input type="text" id="productSearch" placeholder="Search products..." class="search-input">
+        <button id="addProductBtn" class="btn" style="display: none;">
+          <span class="material-icons">add</span>
+          <span>Add Product</span>
+        </button>
+      </div>
+      <table id="productsTable">
+        <thead>
+          <tr>
+            <th>Supplier</th>
+            <th>Product</th>
+            <th>Description</th>
+            <th>Unit Price</th>
+            <th>Min Order</th>
+            <th>Lead Time</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Orders Tab -->
+    <section id="orders-tab" class="tab-content">
+      <div class="search-section">
+        <select id="orderSupplierFilter" class="filter-select">
+          <option value="">All Suppliers</option>
+        </select>
+        <input type="text" id="orderSearch" placeholder="Search purchase orders..." class="search-input">
+        <button id="createRestockOrderBtn" class="btn" style="display: none;">
+          <span class="material-icons">add_shopping_cart</span>
+          <span>Create Restock Order</span>
+        </button>
+      </div>
+      <table id="ordersTable">
+        <thead>
+          <tr>
+            <th>PO Number</th>
+            <th>Supplier</th>
+            <th>Order Date</th>
+            <th>Status</th>
+            <th>Total Amount</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Restock Requests Tab -->
+    <section id="restock-requests-tab" class="tab-content">
+      <div class="search-section">
+        <input type="text" id="restockRequestSearch" placeholder="Search restock requests..." class="search-input">
+        <div class="status-filters">
+          <button class="filter-btn active" data-status="pending">Pending</button>
+          <button class="filter-btn" data-status="approved">Approved</button>
+          <button class="filter-btn" data-status="declined">Declined</button>
+        </div>
+      </div>
+      <table id="restockRequestsTable">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Product</th>
+            <th>Requested Quantity</th>
+            <th>Unit Price</th>
+            <th>Total Value</th>
+            <th>Requested By</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Supplier Modal -->
+    <div id="supplierModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="closeSupplierModal">&times;</span>
+        <h2 id="supplierModalTitle">Add Supplier</h2>
+        <form id="supplierForm">
+          <input type="hidden" id="supplierId">
+          <div class="form-row">
+            <label>Name:
+              <input type="text" id="supplierName" required>
+            </label>
+            <label>Contact Person:
+              <input type="text" id="supplierContactPerson">
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Email:
+              <input type="email" id="supplierEmail">
+            </label>
+            <label>Phone:
+              <input type="text" id="supplierPhone">
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Address:
+              <input type="text" id="supplierAddress">
+            </label>
+            <label>City:
+              <input type="text" id="supplierCity">
+            </label>
+          </div>
+          <div class="form-row">
+            <label>State:
+              <input type="text" id="supplierState">
+            </label>
+            <label>Postal Code:
+              <input type="text" id="supplierPostalCode">
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Country:
+              <input type="text" id="supplierCountry" value="Philippines">
+            </label>
+            <label>Website:
+              <input type="text" id="supplierWebsite">
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Tax ID:
+              <input type="text" id="supplierTaxId">
+            </label>
+            <label>Payment Terms:
+              <input type="text" id="supplierPaymentTerms" value="Net 30">
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Status:
+              <select id="supplierStatus">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Suspended">Suspended</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Notes:
+              <textarea id="supplierNotes"></textarea>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn">Save Supplier</button>
+            <button type="button" class="btn btn-secondary" id="cancelSupplierBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="closeOrderDetailsModal">&times;</span>
+        <h2>Purchase Order Details</h2>
+        <div id="orderDetailsContent"></div>
+      </div>
+    </div>
+
+    <!-- Restock Order Modal -->
+    <div id="restockOrderModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width: 900px;">
+        <span class="close" id="closeRestockOrderModal">&times;</span>
+        <h2>Create Restock Order</h2>
+        <form id="restockOrderForm">
+          <div class="restock-info"
+            style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0;">Order Information</h4>
+            <div class="form-row">
+              <label>PO Number (Auto-generated):
+                <input type="text" id="restockPoNumber" readonly style="background: #e9ecef;">
+              </label>
+              <label>Order Date:
+                <input type="date" id="restockOrderDate" required>
+              </label>
+            </div>
+            <div class="form-row">
+              <label>Notes (Optional):
+                <textarea id="restockNotes" placeholder="Additional notes for this restock order..."
+                  rows="2"></textarea>
+              </label>
+            </div>
+          </div>
+
+          <div class="products-section">
+            <h4>Select Products to Restock</h4>
+            <div style="overflow-x: auto; margin-bottom: 15px;">
+              <table id="restockProductsTable" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #f8f9fa;">
+                    <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Select</th>
+                    <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Product</th>
+                    <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Current Stock</th>
+                    <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Unit Price</th>
+                    <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Quantity</th>
+                    <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Line Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Products will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="order-summary"
+            style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 15px 0;">Order Summary</h4>
+            <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>Subtotal:</span>
+              <span id="restockSubtotal">₱0.00</span>
+            </div>
+            <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>Tax (12%):</span>
+              <span id="restockTax">₱0.00</span>
+            </div>
+            <div class="summary-row"
+              style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em; border-top: 1px solid #dee2e6; padding-top: 8px;">
+              <span>Total Amount:</span>
+              <span id="restockTotal">₱0.00</span>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn" id="submitRestockOrder">Create Restock Order</button>
+            <button type="button" class="btn btn-secondary" id="cancelRestockOrder">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
+  </main>
+  <script src="js/supplier.js"></script>
+  <script src="js/main.js"></script>
+</body>
+
+</html>

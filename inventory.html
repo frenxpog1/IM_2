@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="js/rbac.js"></script>
+  <style>
+    .rbac-hidden {
+      display: none !important;
+    }
+
+    .rbac-disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .user-info {
+      color: #666;
+      font-size: 0.9em;
+      margin-right: 15px;
+    }
+
+    .user-info .username {
+      font-weight: 600;
+    }
+
+    .user-info .role {
+      background: #e3f2fd;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+    }
+
+    /* Pending Requests Button Styles */
+    .pending-requests-button-container {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+      width: 100%;
+    }
+
+    .pending-requests-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .pending-requests-btn .material-icons {
+      font-size: 18px;
+    }
+
+    .request-count-badge {
+      background: #dc3545;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 12px;
+      font-weight: bold;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 4px;
+    }
+
+    /* Pending Requests Modal Styles */
+    .modal-large {
+      max-width: 900px;
+      width: 90%;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px 0;
+      border-bottom: 1px solid #e9ecef;
+      margin-bottom: 20px;
+    }
+
+    .modal-body {
+      padding: 0 24px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 20px 24px;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .requests-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .requests-table th,
+    .requests-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .requests-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .loading-state {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+      font-size: 24px !important;
+      margin-bottom: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .no-requests-message {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+
+    .no-requests-message .material-icons {
+      font-size: 48px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+
+<body class="inventory-page">
+  <header>
+    <nav>
+      <span class="nav-brand"><span class="material-icons">inventory_2</span> Twirly Tails OMS</span>
+      <ul>
+        <li><a href="dashboard.html" data-nav="dashboard"><span class="material-icons">dashboard</span>Dashboard</a>
+        </li>
+        <li><a href="orders.html" data-nav="orders"><span class="material-icons">shopping_cart</span>Orders</a></li>
+        <li><a href="inventory.html" class="active" data-nav="inventory"><span
+              class="material-icons">inventory_2</span>Inventory</a></li>
+        <li><a href="report.html" data-nav="analytics"><span class="material-icons">analytics</span>Analytics</a></li>
+        <li><a href="user.html" data-nav="users"><span class="material-icons">group</span>Users</a></li>
+        <li><a href="supplier.html" data-nav="suppliers"><span class="material-icons">local_shipping</span>Suppliers</a>
+        </li>
+        <li><a href="#" id="logoutBtn"><span class="material-icons">logout</span>Logout</a></li>
+      </ul>
+      <div class="user-info" id="user-info">
+        <!-- User info will be populated by RBAC -->
+      </div>
+      <button class="nav-notification-bell" id="notificationBell">
+        <span class="material-icons">notifications</span>
+        <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+      </button>
+      <div class="notification-dropdown" id="notificationDropdown">
+        <div class="notification-dropdown-header">
+          <h3>Notifications</h3>
+          <button class="clear-all-btn" onclick="clearAllNotifications()">Clear all</button>
+        </div>
+        <div class="notification-dropdown-content" id="notificationList">
+          <!-- Notifications will be populated here -->
+        </div>
+        <div class="notification-dropdown-footer">
+          <button class="view-all-btn" onclick="viewAllNotifications()">View all notifications</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <!-- Notification Container -->
+    <div class="notification-container"></div>
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Inventory Management</h1>
+        <p class="page-subtitle">Manage product inventory, stock levels, and pricing</p>
+      </div>
+    </div>
+
+    <!-- Inventory List -->
+    <section class="content-section">
+      <div class="content-header">
+        <div class="search-section">
+          <div class="search-box">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" id="inventorySearch" placeholder="Search products..." class="search-input">
+          </div>
+          <button id="addProductToInventoryBtn" class="btn" style="display: none;">
+            <span class="material-icons">add</span>
+            <span>Add Product</span>
+          </button>
+        </div>
+        <div class="stats-section">
+          <div class="stats-cards">
+            <div class="stat-card">
+              <span class="stat-number" id="totalProducts">0</span>
+              <span class="stat-label">Total Products</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number" id="lowStockProducts">0</span>
+              <span class="stat-label">Low Stock</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number" id="outOfStockProducts">0</span>
+              <span class="stat-label">Out of Stock</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pending Requests Button -->
+      <div class="pending-requests-button-container">
+        <button id="pendingRequestsBtn" class="btn btn-primary pending-requests-btn" style="display: none;">
+          <span class="material-icons">list_alt</span>
+          <span id="pendingRequestsBtnText">View Pending Requests</span>
+          <span id="pendingRequestsBadge" class="request-count-badge" style="display: none;">0</span>
+        </button>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <h3>Product List</h3>
+        </div>
+        <table id="inventoryTable">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Quantity</th>
+              <th>Stock Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- TODO: Populate supplier products from backend, quantity always 0, include stock status and actions -->
+          </tbody>
+        </table>
+      </div>
+      <!-- Inventory Update Request Modal -->
+      <div id="updateRequestModal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <span class="close" id="closeUpdateRequestModal">&times;</span>
+          <h2 class="modal-title">Request Restock</h2>
+          <form id="updateRequestForm">
+            <input type="hidden" id="updateRequestSupplierProductId" />
+            <label for="updateRequestQuantity">New Quantity:</label>
+            <input type="number" id="updateRequestQuantity" min="0" required />
+            <button type="submit" class="btn btn-primary">Request Restock</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Pending Requests Modal -->
+      <div id="pendingRequestsModal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+          <div class="modal-header">
+            <h2 class="modal-title">Pending Inventory Requests</h2>
+            <span class="close" id="closePendingRequestsModal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <div id="pendingRequestsLoading" class="loading-state" style="display: none;">
+              <span class="material-icons loading-spinner">refresh</span>
+              <p>Loading requests...</p>
+            </div>
+            <div id="pendingRequestsContent">
+              <table id="pendingRequestsTable" class="requests-table">
+                <thead>
+                  <tr id="pendingRequestsTableHeader">
+                    <!-- Table headers will be populated based on user role -->
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Request data will be populated here -->
+                </tbody>
+              </table>
+              <div id="noPendingRequests" class="no-requests-message" style="display: none;">
+                <span class="material-icons">inbox</span>
+                <p>No pending requests found.</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="closePendingRequestsModalBtn">Close</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+  <script src="js/inventory.js"></script>
+  <script src="js/main.js"></script>
+</body>
+
+</html>
