@@ -16,8 +16,30 @@ class RBACManager {
      */
     async initializePermissions() {
         try {
-            const response = await fetch('backend/rbac_init.php');
-            const data = await response.json();
+            const isMock = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('github.io') || window.location.port === '5500';
+            let data;
+
+            if (isMock) {
+                const storedUser = JSON.parse(localStorage.getItem('oms_user'));
+                if (!storedUser) return false;
+
+                data = {
+                    success: true,
+                    user: {
+                        user_id: storedUser.id,
+                        username: storedUser.username,
+                        role: storedUser.role,
+                        supplier_id: storedUser.supplier_id || null
+                    },
+                    user_info: {
+                        role: storedUser.role,
+                        username: storedUser.username
+                    }
+                };
+            } else {
+                const response = await fetch('backend/rbac_init.php');
+                data = await response.json();
+            }
             
             if (data.success && data.user_info) {
                 this.userRole = data.user_info.role;

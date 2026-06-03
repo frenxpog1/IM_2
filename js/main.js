@@ -6,6 +6,16 @@ navLinks.forEach(link => {
   }
 });
 
+// Check if we are running in a mock/demo environment (like Vercel)
+const IS_MOCK_MODE = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('github.io') || window.location.port === '5500';
+
+// Mock Data for Demo
+const MOCK_USERS = {
+  'admin': { id: 1, username: 'admin', role: 1, full_name: 'Demo Admin', email: 'admin@demo.com' },
+  'staff': { id: 2, username: 'staff', role: 2, full_name: 'Demo Staff', email: 'staff@demo.com' },
+  'supplier': { id: 3, username: 'supplier', role: 3, full_name: 'Demo Supplier', email: 'supplier@demo.com', supplier_id: 1 }
+};
+
 // Login form handler using backend
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
@@ -13,24 +23,35 @@ if (loginForm) {
     e.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    // No role field
-    // Show loading state
+    
     const submitBtn = loginForm.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Logging in...';
     submitBtn.disabled = true;
+
     try {
-      console.log('Attempting login with:', { username });
-      const res = await fetch('backend/login.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
-      });
-      console.log('Login response status:', res.status);
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+      let data;
+      
+      if (IS_MOCK_MODE) {
+        // --- MOCK LOGIN FOR DEMO ---
+        console.log('Running in MOCK MODE');
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate lag
+        
+        if (MOCK_USERS[username] && password.includes('123')) {
+          data = { success: true, user: MOCK_USERS[username] };
+        } else {
+          data = { success: false, error: 'Invalid demo credentials. Try admin/admin123' };
+        }
+      } else {
+        // --- REAL LOGIN ---
+        const res = await fetch('backend/login.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+        });
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        data = await res.json();
       }
-      const data = await res.json();
       console.log('Login response data:', data);
       if (data.success) {
         // Store user data
