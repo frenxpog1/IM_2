@@ -16,6 +16,35 @@ const MOCK_USERS = {
   'supplier': { id: 3, username: 'supplier', role: 3, full_name: 'Demo Supplier', email: 'supplier@demo.com', supplier_id: 1 }
 };
 
+// --- DEMO MODE UI ENHANCEMENTS ---
+if (IS_MOCK_MODE) {
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add Demo Banner
+    const banner = document.createElement('div');
+    banner.innerHTML = `
+      <div style="background: #ffc107; color: #000; text-align: center; padding: 5px; font-size: 12px; font-weight: bold; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        🚀 RUNNING IN DEMO MODE (Local DB Disabled)
+      </div>
+    `;
+    document.body.prepend(banner);
+    document.body.style.paddingTop = '25px';
+
+    // Add Login Helper if on login page
+    if (document.getElementById('loginForm')) {
+      const helper = document.createElement('div');
+      helper.innerHTML = `
+        <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 8px; border: 1px solid #b8daff; font-size: 13px; color: #004085;">
+          <strong>Demo Credentials:</strong><br>
+          Admin: <code>admin</code> / <code>admin123</code><br>
+          Staff: <code>staff</code> / <code>staff123</code><br>
+          Supplier: <code>supplier</code> / <code>supplier123</code>
+        </div>
+      `;
+      document.getElementById('loginForm').appendChild(helper);
+    }
+  });
+}
+
 // Login form handler using backend
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
